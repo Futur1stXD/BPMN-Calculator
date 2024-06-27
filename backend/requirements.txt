@@ -1,0 +1,5 @@
+fastapi==0.103.2
+openpyxl==3.1.2
+starlette==0.27.0
+uvicorn==0.22.0
+python-multipart
