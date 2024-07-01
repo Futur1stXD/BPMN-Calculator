@@ -13,7 +13,7 @@ function TableData({as_is, to_be, overall, isPhone}) {
             </thead>
             <tbody>
                 <tr>
-                    <td>CC: Неспосредственные контакты</td>
+                    <td>CC: Непосредственные контакты</td>
                     <td>{as_is.length === 0 ? 0 : as_is['CC']}</td>
                     <td>{to_be.length === 0 ? 0 : to_be['CC']}</td>
                     <td>{overall.length === 0 ? 0 : overall['effect']['CC']}%</td>
