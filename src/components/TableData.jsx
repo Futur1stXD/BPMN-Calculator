@@ -79,8 +79,8 @@ function TableData({as_is, to_be, overall, isPhone}) {
                     <td></td>
                 </tr>
                 <tr>
-                    <td class="green">Относительная степень улучшений</td>
-                    <td class="green"><p><b><em>{overall.length === 0 ? 0 : overall['improvement']}%</em></b></p></td>
+                    <td className="green">Относительная степень улучшений</td>
+                    <td className="green"><p><b><em>{overall.length === 0 ? 0 : overall['improvement']}%</em></b></p></td>
                 </tr>
             </tbody>
         </table>

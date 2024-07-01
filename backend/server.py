@@ -1,6 +1,7 @@
 import uvicorn
 import asyncio
 import csv
+import math
 
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -33,7 +34,22 @@ async def upload_file(file: UploadFile = File(...)):
     except Exception as e:
         print(str(e))
         return JSONResponse(status_code=500, content={"message": "An error occurred", "details": str(e)})
+
+
+def custom_round_up(number):
+    if number > 0:
+        return int(number) + 1 if (number - int(number)) >= 0.5 else int(number)
+    elif number < 0:
+        return int(number) if (number - int(number)) > -0.5 else int(number) - 1
+    else:
+        return 0
     
+
+def normal_round(n, decimals=0):
+    expoN = n * 10 ** decimals
+    if abs(expoN) - abs(math.floor(expoN)) < 0.5:
+        return math.floor(expoN) / 10 ** decimals
+    return math.ceil(expoN) / 10 ** decimals
 
 # Overall Analyzing
 @app.post("/overall/")
@@ -44,8 +60,8 @@ async def overallAnalyze(result: dict):
         as_is_dict = data['result']['as_is']
         to_be_dict = data['result']['to_be']
 
-        as_is_complexity = round(calculate_complexity(as_is_dict), 2)
-        to_be_complexity = round(calculate_complexity(to_be_dict), 2)
+        as_is_complexity = normal_round(calculate_complexity(as_is_dict), 2)
+        to_be_complexity = normal_round(calculate_complexity(to_be_dict), 2)
         effect = calculate_effect(as_is_dict, to_be_dict)
         improvement = calculate_improvement(as_is_complexity, to_be_complexity)
 
@@ -80,10 +96,10 @@ def calculate_effect(as_is_dict, to_be_dict):
         try:
             if key in to_be_dict:
                 if as_is_dict[key] != 0:
-                    effect = round(((to_be_dict[key] - as_is_dict[key]) / as_is_dict[key]) * 100)
+                    effect = round(((to_be_dict[key] - as_is_dict[key]) / as_is_dict[key]) * 100, 2)
                 else:
                     effect = 100 if to_be_dict[key] != 0 else 0
-                effect_dict[key] = effect
+                effect_dict[key] = -1 * custom_round_up(effect)
             else:
                 effect_dict[key] = 0
         except ZeroDivisionError:
@@ -94,11 +110,12 @@ def calculate_effect(as_is_dict, to_be_dict):
 
     return effect_dict
 
+
 def calculate_improvement(as_is_complexity, to_be_complexity):
     try:
         if to_be_complexity == 0:
             return "Error: TO_BE complexity is zero, cannot calculate improvement."
-        return round(((to_be_complexity - as_is_complexity) / as_is_complexity) * 100, 2)
+        return custom_round_up(((to_be_complexity - as_is_complexity) / as_is_complexity) * 100)
     except Exception as e:
         print(e)
 
