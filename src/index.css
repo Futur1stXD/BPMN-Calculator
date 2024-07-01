@@ -102,11 +102,13 @@ a:hover {
   border: 1px solid black;
   padding: 8px;
   text-align: center;
+  padding: 4.224px;
 }
 
 .table-data td:first-child,
 .table-data-phone td:first-child {
   text-align: left;
+  padding: 4.224px;
 }
 
 .table-data .green,
