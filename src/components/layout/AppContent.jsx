@@ -416,7 +416,7 @@ function AppContent({ isPhone, isTablet }) {
                             <Button type="primary" onClick={resetAll}>Сбросить все</Button>
                         </Flex>
                     </div>
-                    <Card>
+                    <Card style={{ height: 550 }}>
                     <TableData as_is={analyzeAS_IS} to_be={analyzeTO_BE} overall={analyzeOverall} isPhone={isPhone} />
                         <Flex justify={'flex-end'} gap={20} style={{ float: 'left', width: '100%', marginTop: '20px' }}>
                             <Button type="primary" onClick={onClickCSV} disabled={openOverall}>.CSV</Button>
