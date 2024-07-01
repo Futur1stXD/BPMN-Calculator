@@ -418,13 +418,18 @@ def incoming_documents(root):
         orange = len(root.findall(".//*[@bioc:stroke='#6b3c00']", namespaces))
         light_orange = len(root.findall(".//*[@bioc:stroke='#fb8c00']", namespaces))
         
-        pattern = re.compile(r'\(DC: (\d+)\)')
+        pattern = re.compile(r'\(DC:(\d+)\)')
+        pattern_1 = re.compile(r'\(DC: (\d+)\)')
         founded_doc_text_format = []
         
         for text_annotation in root.findall('.//bpmn:text', namespaces):
             text = text_annotation.text
             matches = pattern.findall(text)
             if matches:
+                for match in matches:
+                    founded_doc_text_format.append(int(match))
+            else:
+                matches = pattern_1.findall(text)
                 for match in matches:
                     founded_doc_text_format.append(int(match))
         
