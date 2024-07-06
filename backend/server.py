@@ -96,6 +96,7 @@ def calculate_complexity(counts):
         return complexity_score
     except Exception as e:
         print(e)
+        return 0
 
 def calculate_effect(as_is_dict, to_be_dict):
     effect_dict = {}
