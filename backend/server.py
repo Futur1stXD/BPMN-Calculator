@@ -105,7 +105,7 @@ def calculate_effect(as_is_dict, to_be_dict):
                 if as_is_dict[key] != 0:
                     effect = round(((to_be_dict[key] - as_is_dict[key]) / as_is_dict[key]) * 100, 2)
                 else:
-                    effect = 100 if to_be_dict[key] != 0 else 0
+                    effect = 0 if to_be_dict[key] != 0 else 0
                 effect_dict[key] = -1 * custom_round_up(effect)
             else:
                 effect_dict[key] = 0
