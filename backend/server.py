@@ -37,19 +37,27 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 def custom_round_up(number):
-    if number > 0:
-        return int(number) + 1 if (number - int(number)) >= 0.5 else int(number)
-    elif number < 0:
-        return int(number) if (number - int(number)) > -0.5 else int(number) - 1
-    else:
+    try:
+        if number > 0:
+            return int(number) + 1 if (number - int(number)) >= 0.5 else int(number)
+        elif number < 0:
+            return int(number) if (number - int(number)) > -0.5 else int(number) - 1
+        else:
+            return 0
+    except Exception as e:
+        print(e)
         return 0
-    
+
 
 def normal_round(n, decimals=0):
-    expoN = n * 10 ** decimals
-    if abs(expoN) - abs(math.floor(expoN)) < 0.5:
-        return math.floor(expoN) / 10 ** decimals
-    return math.ceil(expoN) / 10 ** decimals
+    try:
+        expoN = n * 10 ** decimals
+        if abs(expoN) - abs(math.floor(expoN)) < 0.5:
+            return math.floor(expoN) / 10 ** decimals
+        return math.ceil(expoN) / 10 ** decimals
+    except Exception as e:
+        print(e)
+        return 0
 
 # Overall Analyzing
 @app.post("/overall/")
@@ -114,10 +122,12 @@ def calculate_effect(as_is_dict, to_be_dict):
 def calculate_improvement(as_is_complexity, to_be_complexity):
     try:
         if to_be_complexity == 0:
-            return "Error: TO_BE complexity is zero, cannot calculate improvement."
+            print("Error: TO_BE complexity is zero, cannot calculate improvement.")
+            return 0
         return custom_round_up(((to_be_complexity - as_is_complexity) / as_is_complexity) * 100)
     except Exception as e:
         print(e)
+        return 0
 
 
 # Download Overall .CSV
@@ -251,9 +261,15 @@ async def download_xlsx(result: dict):
 
 # Server Settings & Main
 async def main():
-    config = uvicorn.Config("server:app", host = '0.0.0.0', port = 3000, log_level = 'info')
-    server = uvicorn.Server(config = config)
-    await server.serve()
+    try:
+        config = uvicorn.Config("server:app", host = '0.0.0.0', port = 3000, log_level = 'info')
+        server = uvicorn.Server(config = config)
+        await server.serve()
+    except Exception as e:
+        print(e)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(e)
