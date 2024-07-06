@@ -56,78 +56,82 @@ def find_groups(root):
 
 
 def sub_process_elements(root): # Initializing counters and dictionaries
-    target_ref_counts = {}
-    unique_id_counts = {}
+    try:
+        target_ref_counts = {}
+        unique_id_counts = {}
 
-    # Define the namespaces for BPMN
-    namespaces = {'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'}
+        # Define the namespaces for BPMN
+        namespaces = {'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'}
 
-    # Collect end events, parallel gateways, subprocesses, sequence flows, flow node references, and system tasks
-    endEvents = set(end_events(root))
-    parallels, not_parallels = parallel_gateways(root)
-    sub_process = root.findall('.//bpmn:subProcess', namespaces=namespaces)
-    all_sequences = root.findall('.//bpmn:sequenceFlow', namespaces=namespaces)
-    all_flow_node_refs = root.findall('.//bpmn:flowNodeRef', namespaces=namespaces)
-    sys_tasks = set(system_tasks(root))
+        # Collect end events, parallel gateways, subprocesses, sequence flows, flow node references, and system tasks
+        endEvents = set(end_events(root))
+        parallels, not_parallels = parallel_gateways(root)
+        sub_process = root.findall('.//bpmn:subProcess', namespaces=namespaces)
+        all_sequences = root.findall('.//bpmn:sequenceFlow', namespaces=namespaces)
+        all_flow_node_refs = root.findall('.//bpmn:flowNodeRef', namespaces=namespaces)
+        sys_tasks = set(system_tasks(root))
 
-    # Initialize sets for subprocesses and gateways with multiple target references
-    sub_process_array = set()
-    gateways_with_multiple_target_refs = set()
+        # Initialize sets for subprocesses and gateways with multiple target references
+        sub_process_array = set()
+        gateways_with_multiple_target_refs = set()
 
-    # Dictionary to store unique objects for each subprocess
-    unique_objects_by_subprocess = {}
+        # Dictionary to store unique objects for each subprocess
+        unique_objects_by_subprocess = {}
 
-    # Iterate over each subprocess
-    for subprocess in sub_process:
-        subprocess_id = subprocess.get('id')
-        children = list(subprocess)
-        subproc_target_ref_counts = collect_target_refs(children)
+        # Iterate over each subprocess
+        for subprocess in sub_process:
+            subprocess_id = subprocess.get('id')
+            children = list(subprocess)
+            subproc_target_ref_counts = collect_target_refs(children)
 
-        # Collect unique objects within the subprocess
-        unique_objects = set()
-        for child in children:
-            if child.get('id') is not None:
-                if child.tag != '{http://www.omg.org/spec/BPMN/20100524/MODEL}sequenceFlow':
-                    if child.get('id') not in endEvents:
-                        all_flow_node_refs.append(child)
-                unique_objects.add(child.get('id'))
+            # Collect unique objects within the subprocess
+            unique_objects = set()
+            for child in children:
+                if child.get('id') is not None:
+                    if child.tag != '{http://www.omg.org/spec/BPMN/20100524/MODEL}sequenceFlow':
+                        if child.get('id') not in endEvents:
+                            all_flow_node_refs.append(child)
+                    unique_objects.add(child.get('id'))
 
-        # Store unique objects for the subprocess
-        unique_objects_by_subprocess[subprocess_id] = unique_objects
+            # Store unique objects for the subprocess
+            unique_objects_by_subprocess[subprocess_id] = unique_objects
 
-        if subprocess_id not in sys_tasks:
-            sub_process_array.add(subprocess_id)
+            if subprocess_id not in sys_tasks:
+                sub_process_array.add(subprocess_id)
 
-        for node in subprocess.findall('.//bpmn:exclusiveGateway', namespaces=namespaces):
-            node_id = node.get('id')
-            if subproc_target_ref_counts.get(node_id, 0) >= 2:
-                gateways_with_multiple_target_refs.add(node_id)
+            for node in subprocess.findall('.//bpmn:exclusiveGateway', namespaces=namespaces):
+                node_id = node.get('id')
+                if subproc_target_ref_counts.get(node_id, 0) >= 2:
+                    gateways_with_multiple_target_refs.add(node_id)
 
-    # Process sequence flows to count target references
-    for seq in all_sequences:
-        target_ref = seq.get('targetRef')
-        target_ref_counts[target_ref] = target_ref_counts.get(target_ref, 0) + 1
+        # Process sequence flows to count target references
+        for seq in all_sequences:
+            target_ref = seq.get('targetRef')
+            target_ref_counts[target_ref] = target_ref_counts.get(target_ref, 0) + 1
 
-    # Process flow node references to count unique IDs
-    for node_ref in all_flow_node_refs:
-        node_id = node_ref.text
-        if node_id is not None:
-            if not node_id.strip():
-                node_id = node_ref.get('id')
-            if node_id in parallels:
-                unique_id_counts[node_id] = unique_id_counts.get(node_id, 0) + 1
-            elif not node_id.startswith('Gateway') or target_ref_counts.get(node_id, 0) == 1:
-                unique_id_counts[node_id] = unique_id_counts.get(node_id, 0) + 1
+        # Process flow node references to count unique IDs
+        for node_ref in all_flow_node_refs:
+            node_id = node_ref.text
+            if node_id is not None:
+                if not node_id.strip():
+                    node_id = node_ref.get('id')
+                if node_id in parallels:
+                    unique_id_counts[node_id] = unique_id_counts.get(node_id, 0) + 1
+                elif not node_id.startswith('Gateway') or target_ref_counts.get(node_id, 0) == 1:
+                    unique_id_counts[node_id] = unique_id_counts.get(node_id, 0) + 1
 
-    # Filter out non-parallel and system task IDs from unique_id_counts
-    for unique in list(unique_id_counts.keys()):
-        if unique in not_parallels:
-            unique_id_counts.pop(unique)
-        for task in sys_tasks:
-            if unique == task:
+        # Filter out non-parallel and system task IDs from unique_id_counts
+        for unique in list(unique_id_counts.keys()):
+            if unique in not_parallels:
                 unique_id_counts.pop(unique)
-    unique_objects_by_subprocess = {k: v for k, v in unique_objects_by_subprocess.items() if v}
-    return unique_objects_by_subprocess    
+            for task in sys_tasks:
+                if unique == task:
+                    unique_id_counts.pop(unique)
+        unique_objects_by_subprocess = {k: v for k, v in unique_objects_by_subprocess.items() if v}
+        return unique_objects_by_subprocess    
+    except Exception as e:
+        print(e)
+        return {}
 
 
 def end_events(root) -> list:
@@ -168,14 +172,18 @@ def end_events(root) -> list:
         return []
     
 def collect_target_refs(children):
-    subproc_target_ref_counts = {}
-    for child in children:
-        if child.tag == '{http://www.omg.org/spec/BPMN/20100524/MODEL}sequenceFlow':
-            target_ref = child.get('targetRef')
-            if target_ref not in subproc_target_ref_counts:
-                subproc_target_ref_counts[target_ref] = 0
-            subproc_target_ref_counts[target_ref] += 1
-    return subproc_target_ref_counts
+    try:
+        subproc_target_ref_counts = {}
+        for child in children:
+            if child.tag == '{http://www.omg.org/spec/BPMN/20100524/MODEL}sequenceFlow':
+                target_ref = child.get('targetRef')
+                if target_ref not in subproc_target_ref_counts:
+                    subproc_target_ref_counts[target_ref] = 0
+                subproc_target_ref_counts[target_ref] += 1
+        return subproc_target_ref_counts
+    except Exception as e:
+        print(e)
+        return {}
     
 def parallel_gateways(root):
     try:
@@ -766,6 +774,7 @@ def moving(root) -> int:
         return counter
     except Exception as e:
         print(e)
+        return 0
 
 
 def main_calculations(contents) -> dict:

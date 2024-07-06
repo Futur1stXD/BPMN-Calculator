@@ -67,7 +67,6 @@ async def overallAnalyze(result: dict):
 
         as_is_dict = data['result']['as_is']
         to_be_dict = data['result']['to_be']
-
         as_is_complexity = normal_round(calculate_complexity(as_is_dict), 2)
         to_be_complexity = normal_round(calculate_complexity(to_be_dict), 2)
         effect = calculate_effect(as_is_dict, to_be_dict)
